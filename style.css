@@ -105,6 +105,8 @@ a:hover { color: var(--accent); }
   pointer-events: none;
 }
 html.drawable { cursor: crosshair; }
+html.touch-drawing { -webkit-user-select: none; user-select: none; }
+a, button { -webkit-tap-highlight-color: transparent; }
 
 .skip-link {
   position: absolute;
@@ -870,6 +872,9 @@ input[type="range"] { width: 100%; height: 24px; margin: 0; accent-color: var(--
     padding: 6px var(--gutter);
     overflow-x: auto;
     scrollbar-width: none;
+    /* fade the edges so it reads as a strip you can swipe */
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 var(--gutter), #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 var(--gutter), #000 calc(100% - 28px), transparent);
   }
   .nav > nav::-webkit-scrollbar { display: none; }
   .nav-links { width: max-content; }
@@ -880,7 +885,7 @@ input[type="range"] { width: 100%; height: 24px; margin: 0; accent-color: var(--
 @media (max-width: 560px) {
   .hero, .about, .projects, .beyond-grid, .edu, .terms { grid-template-columns: 1fr; }
   .beyond-grid > article:first-child { grid-row: auto; }
-  .rosette { width: min(70%, 250px); }
+  .rosette { width: min(58%, 210px); }
   .xp > li { grid-template-columns: 1fr; gap: 2px; }
   .when { padding-top: 0; }
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }

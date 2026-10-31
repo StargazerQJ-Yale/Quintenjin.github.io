@@ -18,6 +18,7 @@
   const pointer = { x: 0, y: 0, inside: false, seen: false };
   const lens = { x: 0, y: 0, k: 0 };
   const knob = { u: .5, v: .5 }; // eased, normalized mouse position that drives the curves
+  const touchOnly = matchMedia('(hover: none)');
   let places = [], ripples = [], sketches = [], stroke = null, lastPointerType = 'mouse';
 
   // On unless the device asks for reduced motion; either way the visitor can switch it and we remember.
@@ -212,7 +213,7 @@
       if (cy + r < -40 || cy - r > H + 40) continue;
       const { paths, label, rot = 0 } = FIGURES[p.fig](knob);
       const c = Math.cos(rot), s = Math.sin(rot);
-      ctx.strokeStyle = ink(centered ? .11 : wide ? .2 : .1);
+      ctx.strokeStyle = ink(centered ? .11 : wide ? .2 : .14);
       ctx.lineWidth = 1;
       ctx.beginPath();
       for (const path of paths) {
@@ -311,14 +312,17 @@
     lens.y += (pointer.y - lens.y) * .2;
     lens.k += ((live ? 1 : 0) - lens.k) * .12;
     if (!live && lens.k < .005) lens.k = 0;
-    const goal = live ? [clamp01(pointer.x / W), clamp01(pointer.y / H)] : [knob.u, knob.v];
+    // Phones have no hover, so there the curves follow the scroll position instead of the mouse
+    const goal = !enabled ? [knob.u, knob.v]
+      : touchOnly.matches ? [.5 + .5 * Math.sin(scrollY / 700), .5 + .5 * Math.sin(scrollY / 1100 + 1)]
+      : live ? [clamp01(pointer.x / W), clamp01(pointer.y / H)] : [knob.u, knob.v];
     knob.u += (goal[0] - knob.u) * .08;
     knob.v += (goal[1] - knob.v) * .08;
     draw(now);
-    const settling = Math.abs(pointer.x - lens.x) + Math.abs(pointer.y - lens.y) > .3
+    const settling = (live && Math.abs(pointer.x - lens.x) + Math.abs(pointer.y - lens.y) > .3)
       || Math.abs((live ? 1 : 0) - lens.k) > .005
       || Math.abs(goal[0] - knob.u) + Math.abs(goal[1] - knob.v) > .0005;
-    if ((live && settling) || (!live && lens.k) || stroke || ripples.length || sketches.length) wake();
+    if (settling || stroke || ripples.length || sketches.length) wake();
   }
 
   // ---------- Input ----------
@@ -331,7 +335,7 @@
     pointer.x = e.clientX;
     pointer.y = e.clientY;
     pointer.inside = true;
-    if (stroke && !(e.buttons & 1)) finishStroke(e); // the release happened somewhere we didn't hear it
+    if (stroke && !(e.buttons & 1)) finishStroke(e.pageX, e.pageY); // the release happened somewhere we didn't hear it
     if (stroke) {
       const last = stroke.pts[stroke.pts.length - 1];
       if (Math.hypot(e.pageX - last[0], e.pageY - last[1]) > 3) stroke.pts.push([e.pageX, e.pageY]);
@@ -350,19 +354,20 @@
     wake();
   });
 
-  function finishStroke(e) {
+  function finishStroke(x, y) {
     const pts = stroke.pts;
     stroke = null;
+    root.classList.remove('touch-drawing');
     let length = 0;
     for (let i = 1; i < pts.length; i++) length += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
-    if (length < 60 || pts.length < 6) ripples.push({ x: e.pageX, y: e.pageY, t0: performance.now() });
+    if (length < 60 || pts.length < 6) ripples.push({ x, y, t0: performance.now() });
     else {
       sketches.push({ ...fourier(pts), t0: performance.now() });
       if (sketches.length > 3) sketches.shift();
     }
     wake();
   }
-  addEventListener('pointerup', e => { if (stroke) finishStroke(e); });
+  addEventListener('pointerup', e => { if (stroke && !stroke.touch) finishStroke(e.pageX, e.pageY); });
   addEventListener('pointercancel', () => { stroke = null; wake(); });
   addEventListener('blur', () => { stroke = null; wake(); });
   document.addEventListener('selectstart', e => { if (stroke) e.preventDefault(); });
@@ -373,6 +378,63 @@
     ripples.push({ x: e.pageX, y: e.pageY, t0: performance.now() });
     wake();
   });
+
+  // ---------- Touch: the lens follows the finger; hold still on blank space, then drag, to draw ----------
+  let hold = 0, holdAt = null;
+  const cancelHold = () => { clearTimeout(hold); hold = 0; holdAt = null; };
+
+  addEventListener('touchstart', e => {
+    cancelHold();
+    if (!enabled || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    if (lens.k < .01) { lens.x = t.clientX; lens.y = t.clientY; }
+    pointer.x = t.clientX;
+    pointer.y = t.clientY;
+    pointer.inside = true;
+    if (isBlank(e.target)) {
+      holdAt = [t.clientX, t.clientY];
+      const start = [t.pageX, t.pageY];
+      hold = setTimeout(() => {
+        hold = 0;
+        stroke = { pts: [start], touch: true };
+        root.classList.add('touch-drawing');
+        navigator.vibrate?.(12);
+        wake();
+      }, 380);
+    }
+    wake();
+  }, { passive: true });
+
+  // Not passive: once a hold has turned into drawing, the finger draws instead of scrolling
+  addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    if (!t) return;
+    pointer.x = t.clientX;
+    pointer.y = t.clientY;
+    if (stroke?.touch) {
+      e.preventDefault();
+      const last = stroke.pts[stroke.pts.length - 1];
+      if (Math.hypot(t.pageX - last[0], t.pageY - last[1]) > 3) stroke.pts.push([t.pageX, t.pageY]);
+    } else if (holdAt && Math.hypot(t.clientX - holdAt[0], t.clientY - holdAt[1]) > 10) {
+      cancelHold(); // it's a scroll
+    }
+    wake();
+  }, { passive: false });
+
+  addEventListener('touchend', e => {
+    cancelHold();
+    pointer.inside = false;
+    const t = e.changedTouches[0];
+    if (stroke?.touch) finishStroke(t.pageX, t.pageY);
+    wake();
+  });
+  addEventListener('touchcancel', () => {
+    cancelHold();
+    pointer.inside = false;
+    if (stroke?.touch) { stroke = null; root.classList.remove('touch-drawing'); }
+    wake();
+  });
+  addEventListener('contextmenu', e => { if (stroke?.touch) e.preventDefault(); });
 
   document.addEventListener('mouseout', e => {
     if (e.relatedTarget) return;
