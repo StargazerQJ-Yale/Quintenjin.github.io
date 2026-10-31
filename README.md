@@ -8,6 +8,7 @@ Plain HTML, CSS, and JavaScript. No build step and no dependencies beyond Google
 | `style.css` | Design tokens (colors and fonts at the top), layout, light/dark themes |
 | `script.js` | Theme toggle, generated paper-cut rosettes, scroll reveal, nav highlighting |
 | `papercut.js` | "Fold & cut" studio: canvas drawing mirrored through the dihedral group D<sub>n</sub> |
+| `geometry.js` | Living graph-paper background: cursor lens, mouse-driven curves, click ripples, drag-to-draw Fourier epicycles |
 | `bspline.js` | B-spline playground: draggable control points with Cox–de Boor basis functions |
 
 **Preview:** open `index.html` in a browser.

@@ -87,11 +87,24 @@ a:hover { color: var(--accent); }
 :root[data-theme="dark"] ::selection { color: var(--bg); }
 
 .wrap {
+  position: relative;
+  z-index: 1; /* content sits above the graph-paper canvas */
   width: 100%;
   max-width: var(--max);
   margin-inline: auto;
   padding-inline: var(--gutter);
 }
+
+/* Living graph paper (geometry.js): above section backgrounds, below all content */
+.geometry {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+html.drawable { cursor: crosshair; }
 
 .skip-link {
   position: absolute;
@@ -289,6 +302,24 @@ a:hover { color: var(--accent); }
 }
 
 .cta { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* shown only once geometry.js is running */
+.play-hint {
+  display: none;
+  max-width: 56ch;
+  margin-top: 14px;
+  font: var(--fs-label)/1.6 var(--mono);
+  color: var(--ink-3);
+}
+[data-geometry] .play-hint { display: block; }
+[data-geometry="off"] .hint-on,
+[data-geometry="on"] .hint-off { display: none; }
+.play-hint .link-btn { margin-left: 4px; padding: 2px 0; }
+.hint-touch { display: none; }
+@media (hover: none) {
+  .hint-mouse { display: none; }
+  .hint-touch { display: inline; }
+}
 
 .hero-art {
   display: grid;
@@ -674,11 +705,43 @@ input[type="range"] { width: 100%; height: 24px; margin: 0; accent-color: var(--
 .basis-cursor { stroke: var(--sun); stroke-width: 1.5; stroke-dasharray: 3 4; }
 
 /* ---------- Education ---------- */
+/* Yale spans the full row; MITx, BU Academy and further study share the row below */
 .edu {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: 14px;
 }
+.edu-yale { grid-column: 1 / -1; }
+
+.terms {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 36px;
+  margin-top: 6px;
+}
+.term-label {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  font: 500 var(--fs-label) var(--mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.courses { margin: 0; padding: 0; list-style: none; }
+.courses li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 2px 12px;
+  padding-block: 6px;
+  border-bottom: 1px dashed var(--line);
+  font-size: .88rem;
+}
+.courses > li > a { color: var(--ink); text-decoration: none; font-weight: 500; }
+.courses > li > a:hover { color: var(--accent); text-decoration: underline; }
+.code { font: var(--fs-label) var(--mono); color: var(--ink-3); white-space: nowrap; }
+.course-note { flex-basis: 100%; color: var(--ink-2); font-size: .8rem; line-height: 1.55; }
 .edu-card { gap: 6px; padding: 18px; }
 .edu-card .when { padding: 0; }
 .edu-card h3 { font-size: 1.1rem; }
@@ -831,10 +894,6 @@ input[type="range"] { width: 100%; height: 24px; margin: 0; accent-color: var(--
   .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-@media (max-width: 1000px) {
-  .edu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
 @media (max-width: 900px) {
   .lab, .lab--flip { grid-template-columns: 1fr; }
   .lab--flip .lab-stage { order: 0; }
@@ -856,10 +915,12 @@ input[type="range"] { width: 100%; height: 24px; margin: 0; accent-color: var(--
   }
   .nav > nav::-webkit-scrollbar { display: none; }
   .nav-links { width: max-content; }
+  .edu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .edu-mitx { grid-column: 1 / -1; }
 }
 
 @media (max-width: 560px) {
-  .hero, .about, .projects, .beyond-grid, .edu { grid-template-columns: 1fr; }
+  .hero, .about, .projects, .beyond-grid, .edu, .terms { grid-template-columns: 1fr; }
   .beyond-grid > article:first-child { grid-row: auto; }
   .rosette { width: min(70%, 250px); }
   .xp > li { grid-template-columns: 1fr; gap: 2px; }
@@ -883,5 +944,5 @@ input[type="range"] { width: 100%; height: 24px; margin: 0; accent-color: var(--
 
 @media print {
   .js .reveal { opacity: 1; transform: none; }
-  .site-header, #workshop { display: none; }
+  .site-header, #workshop, .geometry { display: none; }
 }
