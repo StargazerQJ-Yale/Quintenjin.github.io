@@ -12,7 +12,7 @@
   const LENS = 160, BULGE = .5, MINOR = 24, MAJOR = 120;
   const TRACE = 3600, HOLD = 700, FADE = 900, EPICYCLES = 40;
   // Anything a visitor might want to read, select or use; drawing only starts outside these
-  const BUSY = 'a, button, input, label, select, textarea, canvas, svg, p, h1, h2, h3, li, dt, dd, figcaption, header, footer, .card, .edu-card, .lab, .stat, .now';
+  const BUSY = 'a, button, input, label, select, textarea, canvas, svg, p, h1, h2, h3, li, dt, dd, figcaption, header, footer, .card, .edu-card, .lab, .stat';
 
   let W = 0, H = 0, rgb = '40,109,192';
   const pointer = { x: 0, y: 0, inside: false, seen: false };

@@ -358,48 +358,6 @@ html.drawable { cursor: crosshair; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes snip { from { transform: scale(0); } }
 
-/* ---------- Now strip ---------- */
-.now {
-  border-block: 1px solid var(--line);
-  background: var(--surface);
-}
-.now-inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px 28px;
-  padding-block: 11px;
-}
-.now-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font: 500 var(--fs-label) var(--mono);
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-.now-label::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--sun);
-  animation: pulse 2.4s ease-in-out infinite;
-}
-@keyframes pulse { 50% { opacity: .35; } }
-.now ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 26px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  color: var(--ink-2);
-  font-size: .85rem;
-}
-.now strong { color: var(--ink); font-weight: 600; }
-
 /* ---------- Sections ---------- */
 .section {
   --band: var(--bg);
