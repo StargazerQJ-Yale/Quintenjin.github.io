@@ -463,10 +463,10 @@
   function setEnabled(on, remember) {
     enabled = on;
     root.dataset.geometry = on ? 'on' : 'off';
-    toggle.textContent = on ? 'Pause' : 'Turn it on';
+    toggle.textContent = on ? 'Pause' : 'Enable';
     hintOff.textContent = !on && reducedMotion.matches && !stored
-      ? 'The moving geometry is paused because your device asks for reduced motion.'
-      : 'The moving geometry is paused.';
+      ? 'Interactive background paused because your device requests reduced motion.'
+      : 'Interactive background paused.';
     if (remember) {
       stored = on ? 'on' : 'off';
       try { localStorage.setItem('geometry', stored); } catch {}
